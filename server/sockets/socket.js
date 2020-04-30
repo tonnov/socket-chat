@@ -1,41 +1,48 @@
 
 const { io } = require('../server');
+const {Usuarios}  = require('../classes/usuarios');
+const { crearMensaje } = require('../utilidades/utilidades.js');
+
+const usuarios =  new Usuarios();
 
 
 io.on('connection', (client) => {
     
-    console.log('Usuario conectado');
+    //console.log('Usuario conectado');
 
-    // Enviar Mensaje al cliente
-    client.emit('enviarMensaje', {
-        usuario: 'Administrador',
-        mensaje: 'Bienvenido a esta aplicación'
-    } );
+    client.on('entrarChat', (data, callback) => {
 
-    client.on('disconnect', () => {
+        if(!data.nombre){
+            return callback({
+                error: true,
+                mensaje: 'El nombre es necesario'
+            });
+        }
+
+        let personas = usuarios.agregarPersona(client.id, data.nombre);
+
+        client.broadcast.emit('listaPersonas', usuarios.getPersonas());
+
+        callback(personas);
         
-        console.log('Usuario desconectado');
+        //console.log(personas);
         
     });
 
-    // Escuchar cliente
-    client.on('enviarMensaje', (data, callback) => {
+    client.on('crearMensaje', (data) => {
+        let persona = usuarios.getPersona(client.id);
+        let mensaje = crearMensaje(persona.nombre, data.mensaje);
+        client.broadcast.emit('crearMensaje', mensaje);
+    });
 
-        console.log( nTicket );
+    client.on('disconnect', () => {
+        let personaBorrada = usuarios.borrarPersona(client.id);
+
+        client.broadcast.emit('crearMensaje', crearMensaje('Administrador', `${personaBorrada.nombre} salió`));
+
+        client.broadcast.emit('listaPersonas', usuarios.getPersonas());
+        //console.log('Se ha desconectado', personaBorrada);
         
-        client.broadcast.emit('enviarMensaje', data);
-
-        // if (mensaje.usuario) {
-        //     callback({
-        //         resp: 'TODO SALIO BIEN!'
-        //     });
-
-        // } else {
-        //     callback({
-        //         resp: 'TODO SALIO MAL!!!!!!!!'
-        //     });
-        // }
-
     });
     
 });
