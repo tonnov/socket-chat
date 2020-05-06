@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/tonnov/socket-chat#readme",
   "dependencies": {
+    "@mdi/font": "^5.1.45",
     "express": "^4.17.1",
     "socket.io": "^2.3.0"
   }
